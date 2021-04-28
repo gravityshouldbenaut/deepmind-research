@@ -170,6 +170,7 @@ def _run_evaluation(
   logging.info('Tested on %d', num_examples)
 
 
+#takes all residues, their torsion and secondary structure values, and finds the contact map by evaluating ALL crops within a domain to see where these values match
 def compute_one_prediction(
     num_examples, experiment, sess, eval_config, num_bins, torsion_bins):
   """Find the contact map for a single domain."""
@@ -288,7 +289,7 @@ def compute_one_prediction(
       asa=asa_accum,
       torsions=torsions_accum)
 
-
+#does the above but just for one crop and not for all crops in a domain
 def compute_one_patch(sess, experiment, output_fetches, inputs_1d,
                       residue_index, prob_weights, batch, length, i, j,
                       crop_size_x, crop_size_y):

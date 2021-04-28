@@ -27,8 +27,10 @@ class ASAOutputLayer(object):
     """Just compute the logits and outputs given activations."""
     asa_logits = tf.contrib.layers.linear(
         activations, 1,
-        weights_initializer=tf.random_uniform_initializer(-0.01, 0.01),
-        scope='ASALogits')
-    self.asa_output = tf.nn.relu(asa_logits, name='ASA_output_relu')
+        weights_initializer=tf.random_uniform_initializer(-0.01, 0.01), #generates tensors with a uniform distribution from -0.01 to 0.01 https://www.tensorflow.org/api_docs/python/tf/random_uniform_initializer
+        scope='ASALogits') #essentially creates a neural net wherein the activations are the inputs, there is 1 output, the weights are randomized from -0.01 to 0.01, and a scope name is assigned
+      #same neural net is ran below, looking for the positive results after applications of weights 
+      
+    self.asa_output = tf.nn.relu(asa_logits, name='ASA_output_relu') #computes the rectified linear https://www.tensorflow.org/api_docs/python/tf/nn/relu, which is only the positive part of the tensor https://en.wikipedia.org/wiki/Rectifier_(neural_networks)
 
     return asa_logits

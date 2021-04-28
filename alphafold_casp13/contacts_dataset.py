@@ -38,38 +38,38 @@ NUM_RES = 'num residues placeholder'
 # Sizes of the protein features. NUM_RES is allowed as a placeholder to be
 # replaced with the number of residues.
 FEATURES = {
-    'aatype': (tf.float32, [NUM_RES, 21]),
-    'alpha_mask': (tf.int64, [NUM_RES, 1]),
-    'alpha_positions': (tf.float32, [NUM_RES, 3]),
-    'beta_mask': (tf.int64, [NUM_RES, 1]),
-    'beta_positions': (tf.float32, [NUM_RES, 3]),
-    'between_segment_residues': (tf.int64, [NUM_RES, 1]),
-    'chain_name': (tf.string, [1]),
-    'deletion_probability': (tf.float32, [NUM_RES, 1]),
-    'domain_name': (tf.string, [1]),
-    'gap_matrix': (tf.float32, [NUM_RES, NUM_RES, 1]),
-    'hhblits_profile': (tf.float32, [NUM_RES, 22]),
-    'hmm_profile': (tf.float32, [NUM_RES, 30]),
+    'aatype': (tf.float32, [NUM_RES, 21]), #atom type
+    'alpha_mask': (tf.int64, [NUM_RES, 1]), #a rerepresentation of an alpha position to fit some residue type? honestly do not know
+    'alpha_positions': (tf.float32, [NUM_RES, 3]), #positions of alpha structure wherein every N-H group bound to a C=O is located 4 residues earlier https://en.wikipedia.org/wiki/Alpha_helix
+    'beta_mask': (tf.int64, [NUM_RES, 1]), #a rerepresentation of a beta sheet to fit some residue type? honestly do not know
+    'beta_positions': (tf.float32, [NUM_RES, 3]), #positions of the beta sheet, which have alternating directions of beta strands, which are 3-10 amino acid long residues https://en.wikipedia.org/wiki/Beta_sheet#Geometry
+    'between_segment_residues': (tf.int64, [NUM_RES, 1]), #residues between alpha and beta segments?
+    'chain_name': (tf.string, [1]), #name of chain type that the residues belong to
+    'deletion_probability': (tf.float32, [NUM_RES, 1]), #probability of a residue not being involved in a fold? 
+    'domain_name': (tf.string, [1]), #name of domain that the chain belongs to, AKA model, within the total structure 
+    'gap_matrix': (tf.float32, [NUM_RES, NUM_RES, 1]),#gap between residues?
+    'hhblits_profile': (tf.float32, [NUM_RES, 22]), #profile from the hhb library
+    'hmm_profile': (tf.float32, [NUM_RES, 30]), #profile from hmm library
     'key': (tf.string, [1]),
-    'mutual_information': (tf.float32, [NUM_RES, NUM_RES, 1]),
+    'mutual_information': (tf.float32, [NUM_RES, NUM_RES, 1]), 
     'non_gapped_profile': (tf.float32, [NUM_RES, 21]),
     'num_alignments': (tf.int64, [NUM_RES, 1]),
     'num_effective_alignments': (tf.float32, [1]),
-    'phi_angles': (tf.float32, [NUM_RES, 1]),
-    'phi_mask': (tf.int64, [NUM_RES, 1]),
-    'profile': (tf.float32, [NUM_RES, 21]),
+    'phi_angles': (tf.float32, [NUM_RES, 1]), #angles of N-Ca torsionability https://proteinstructures.com/structure/ramachandran-plot/
+    'phi_mask': (tf.int64, [NUM_RES, 1]), #image mask of the N-Ca torsionability 
+    'profile': (tf.float32, [NUM_RES, 21]), 
     'profile_with_prior': (tf.float32, [NUM_RES, 22]),
     'profile_with_prior_without_gaps': (tf.float32, [NUM_RES, 21]),
     'pseudo_bias': (tf.float32, [NUM_RES, 22]),
     'pseudo_frob': (tf.float32, [NUM_RES, NUM_RES, 1]),
     'pseudolikelihood': (tf.float32, [NUM_RES, NUM_RES, 484]),
-    'psi_angles': (tf.float32, [NUM_RES, 1]),
-    'psi_mask': (tf.int64, [NUM_RES, 1]),
-    'residue_index': (tf.int64, [NUM_RES, 1]),
+    'psi_angles': (tf.float32, [NUM_RES, 1]), #angles of C-Ca torsionability https://proteinstructures.com/structure/ramachandran-plot/
+    'psi_mask': (tf.int64, [NUM_RES, 1]), #image mask of the C-Ca torsionability 
+    'residue_index': (tf.int64, [NUM_RES, 1]), 
     'resolution': (tf.float32, [1]),
     'reweighted_profile': (tf.float32, [NUM_RES, 22]),
-    'sec_structure': (tf.int64, [NUM_RES, 8]),
-    'sec_structure_mask': (tf.int64, [NUM_RES, 1]),
+    'sec_structure': (tf.int64, [NUM_RES, 8]), #tensor shape of the secondary structure likely based on the alpha and beta maps
+    'sec_structure_mask': (tf.int64, [NUM_RES, 1]),#iamge mask of secondary structure 
     'seq_length': (tf.int64, [NUM_RES, 1]),
     'sequence': (tf.string, [1]),
     'solv_surf': (tf.float32, [NUM_RES, 1]),
@@ -80,7 +80,7 @@ FEATURES = {
 FEATURE_TYPES = {k: v[0] for k, v in FEATURES.items()}
 FEATURE_SIZES = {k: v[1] for k, v in FEATURES.items()}
 
-
+#here, "shape" is defined as simply the tensor weights, rather than the actual angular changes relating one to another
 def shape(feature_name, num_residues, features=None):
   """Get the shape for the given feature name.
 
@@ -104,7 +104,7 @@ def shape(feature_name, num_residues, features=None):
   sizes = [replacements.get(dimension, dimension) for dimension in raw_sizes]
   return sizes
 
-
+#a getter for feature 
 def dim(feature_name):
   """Determine the type of feature.
 
@@ -176,7 +176,7 @@ def parse_tfexample(raw_data, features):
 
   return parsed_features
 
-
+#this only creates a file in the FORM of SSTable, wherein the aatype, sequence, and seqlength are the only items taken into consideration, not actually creating a reference comparison to SSTable
 def create_tf_dataset(tf_record_filename, features):
   """Creates an instance of tf.data.Dataset backed by a protein dataset SSTable.
 
@@ -198,7 +198,8 @@ def create_tf_dataset(tf_record_filename, features):
 
   return tf_dataset
 
-
+#takes stats from a JSON file, modifies some "features" type to have its values vasted to float32s, subtracts this value by the mean in the stats file,
+#then updates this value and the feature by setting it to a tensor that has the same tensor weightage shape as value/square root of var key and value if the square root of var key is greater than 1*10^-12
 def normalize_from_stats_file(
     features, stats_file_path, feature_normalization, copy_unnormalized=None):
   """Normalizes the features set in the feature_normalization by the norm stats.
@@ -253,7 +254,7 @@ def normalize_from_stats_file(
                        % (feature_normalization[key], key))
   return features
 
-
+#converts the features dictonary to tensors in unnomralized forms to a tuple that contiains all that is listed under Returns..what is this legacy to? 
 def convert_to_legacy_proteins_dataset_format(
     features, desired_features, desired_scalars, desired_targets):
   """Converts the output of tf.Dataset to the legacy format.

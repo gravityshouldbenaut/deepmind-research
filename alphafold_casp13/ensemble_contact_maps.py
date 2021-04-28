@@ -39,7 +39,7 @@ flags.DEFINE_string(
     'output_dir', None, 'Directory where to save results of the evaluation.')
 FLAGS = flags.FLAGS
 
-
+#aggregate ALL the contact graphs with all the networks to make one large graph
 def ensemble_distance_histograms(pickle_dirs, weights, output_dir):
   """Find all the contact maps in the first dir, then ensemble across dirs."""
   if len(pickle_dirs) <= 1:

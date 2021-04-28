@@ -30,7 +30,8 @@ def _float_ph(shape, name):
   return tf.placeholder(
       dtype=tf.float32, shape=shape, name=('%s_placeholder' % name))
 
-
+#creates contact graphs consisting of tensors representing potential contact points between residues for a defined x - y size so that graphs can be evaluated piecewise without necessitating a large computational resource
+#this contact map is not based on chemical contact, but rather proximity of initial residue placements and their angular interactions
 class Contacts(object):
   """Contact prediction experiment."""
 
@@ -155,7 +156,7 @@ class Contacts(object):
             shape=[None, None, 1], name='torsions_mask')
         self.torsion_logits_placeholder = _float_ph(
             shape=[None, None, self.network_config.torsion_bins ** 2],
-            name='torsion_logits')
+            name='torsion_logits') #a logit is equal to log ( probability / 1 - probability) and is used for logistic regression calcs in a binary setting; here, seems to be used as a way to easily compare torsions
 
       # Build a dict to pass all the placeholders into build.
       placeholders = {
@@ -202,7 +203,7 @@ class Contacts(object):
         'inputs_1d': self._input_batch.inputs_1d,
         'inputs_2d': self._input_batch.inputs_2d,
         'sequence_lengths': self._input_batch.sequence_lengths,
-        'beta_positions': self._input_batch.targets.beta_positions,
+        'beta_positions': self._input_batch.targets.beta_positions, #okay, seems to already be having some beta structure then as an input function to be able to complete this 
         'beta_mask': self._input_batch.targets.beta_mask,
         'domain_name': self._input_batch.targets.domain_name,
         'chain_name': self._input_batch.targets.chain_name,

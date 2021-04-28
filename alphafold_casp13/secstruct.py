@@ -25,7 +25,8 @@ import tensorflow as tf  # pylint: disable=g-explicit-tensorflow-version-import
 SECONDARY_STRUCTURES = '-HETSGBI'
 
 # Equivalence classes for 3-class (Q3) from Li & Yu 2016.
-# See http://www.cmbi.ru.nl/dssp.html for letter explanations.
+# See https://swift.cmbi.umcn.nl/gv/dssp/ for letter explanations.
+# This below is a SPECIFIC Q3 map for a specific protein 
 Q3_MAP = ['-TSGIB', 'H', 'E']
 
 

@@ -46,8 +46,8 @@ def make_sep_res_layer(
           h_conv, layer_name=layer_name, is_training=is_training,
           data_format=data_format)
 
-    h_conv = tf.nn.elu(h_conv)
-
+    h_conv = tf.nn.elu(h_conv) #takes the convolutional layer,and runs the exponential linear unit across all tensors, wherein a set of tensors is returned such exp(x)-1 is returned for some x if x < 0 and x is returned if x > 0  
+    #does so with the intent to create a trained model 
     if filter_size_2 is None:
       filter_size_2 = filter_size
 

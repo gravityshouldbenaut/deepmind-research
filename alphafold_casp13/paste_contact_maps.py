@@ -36,7 +36,7 @@ flags.DEFINE_string("crop_sizes", "64,128,256", "The crop sizes to use.")
 flags.DEFINE_integer("crop_step", 32, "The step size for cropping.")
 FLAGS = flags.FLAGS
 
-
+#given a list of predefined cropsizes, go through all the residues to find which domains, which are sets of residues that fit within a crop, can be bundled
 def generate_domains(target, sequence, crop_sizes, crop_step):
   """Take fasta files and generate a domain definition for data generation."""
   logging.info("Generating crop domains for target %s", target)

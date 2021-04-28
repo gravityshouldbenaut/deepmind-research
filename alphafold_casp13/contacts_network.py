@@ -71,7 +71,7 @@ class ContactsNet(sonnet.AbstractModule):
 
     self._filters_1d = filters_1d
     self._collapsed_batch_norm = collapsed_batch_norm
-    self._is_ca_feature = is_ca_feature
+    self._is_ca_feature = is_ca_feature #calcium identifier...beyond phi and psi angles I guess? 
     self._binary_code_bits = binary_code_bits
     self._data_format = data_format
     self._distance_multiplier = distance_multiplier
@@ -116,6 +116,7 @@ class ContactsNet(sonnet.AbstractModule):
     return int(
         (threshold - self._min_range) * self._num_bins / float(self._max_range))
 
+#creating a network of contact maps? 
   def _build(self, crop_size_x=0, crop_size_y=0, placeholders=None):
     """Puts the network into the graph.
 
@@ -131,7 +132,7 @@ class ContactsNet(sonnet.AbstractModule):
     inputs_1d = placeholders['inputs_1d_placeholder']
     if self._is_ca_feature and 'aatype' in self._features:
       logging.info('Collapsing aatype to is_ca_feature %s',
-                   inputs_1d.shape.as_list()[-1])
+                   inputs_1d.shape.as_list()[-1]) #why is this needed if aatype already tells you if the atom is a calcium or not? 
       assert inputs_1d.shape.as_list()[-1] <= 21 + (
           1 if 'seq_length' in self._features else 0)
       inputs_1d = inputs_1d[:, :, 7:8]
@@ -144,10 +145,13 @@ class ContactsNet(sonnet.AbstractModule):
         use_on_the_fly_stats=True,
         crop_size_x=crop_size_x,
         crop_size_y=crop_size_y,
-        data_format='NHWC',  # Force NHWC for evals.
+        data_format='NHWC',  # Force NHWC for evals. First checks number bins (N), then checks height, then checks width, and finally a channel check for the pixels in the image https://www.codetd.com/en/article/11877820 
+        
     )
     return logits
 
+#tries to concatenate the tensors of all potential contact maps in a 2D format, using scalar multipliers and exponential shifts as a way to compare 
+#features across contact subunits; returns logistical regressions (logits) for the tensors 
   def compute_outputs(self, inputs_1d, residue_index, inputs_2d, crop_x, crop_y,
                       use_on_the_fly_stats, crop_size_x, crop_size_y,
                       data_format='NHWC'):
@@ -204,7 +208,7 @@ class ContactsNet(sonnet.AbstractModule):
                 else None),
             normalizer_params={'is_training': use_on_the_fly_stats,
                                'updates_collections': None},
-            scope='collapsed_embed_%d' % i)
+            scope='collapsed_embed_%d' % i) #deprecated as of TF 2.0, but is essentially used to help set up a normalizer across bins in both horizontal and vertical directions, which are the two dimensions in this graph https://www.tensorflow.org/versions/r1.15/api_docs/python/tf/contrib/layers/batch_norm 
 
       if self.torsion_multiplier > 0:
         self.torsion_logits = tf.contrib.layers.fully_connected(
@@ -212,7 +216,8 @@ class ContactsNet(sonnet.AbstractModule):
             num_outputs=self._torsion_bins * self._torsion_bins,
             activation_fn=None,
             scope='torsion_logits')
-        self.torsion_output = tf.nn.softmax(self.torsion_logits)
+        self.torsion_output = tf.nn.softmax(self.torsion_logits) #looks for a smooth approximation of the max of the torsions' logits, which are the 
+        #logistical regressions of torsional values, through the division of e^torsion angle by sum of e^torsion angle until that torsion angle index  https://en.wikipedia.org/wiki/Softmax_function https://www.tensorflow.org/api_docs/python/tf/nn/softmax
       if self.secstruct_multiplier > 0:
         self._secstruct.make_layer_new(embedding_1d)
       if self.asa_multiplier > 0:
@@ -348,7 +353,7 @@ class ContactsNet(sonnet.AbstractModule):
             atrou_rates=[1, 2, 4, 8],
             data_format=data_format,
             dropout_keep_prob=1.0
-        )
+        ) #runs the 2D neural net for the tensors that have additional features beyond the location as per potential contacting
         num_features = 2 * config_2d_deep.num_filters
         if self._skip_connect:
           layers_forward = hidden_2d
@@ -374,16 +379,17 @@ class ContactsNet(sonnet.AbstractModule):
           atrou_rates=[1, 2, 4, 8],
           data_format=data_format,
           dropout_keep_prob=1.0
-      )
+      ) #run 2d neural net for the contacts
 
       contact_logits = self._output_from_pre_logits(
           contact_pre_logits, features_forward, layers_forward,
-          output_dimension, data_format, crop_x, crop_y, use_on_the_fly_stats)
+          output_dimension, data_format, crop_x, crop_y, use_on_the_fly_stats) #applies the convolutional layer to the resnet output 
       if data_format == 'NCHW':
         contact_pre_logits = tf.transpose(contact_pre_logits, perm=[0, 2, 3, 1])
     # Both of these will be NHWC
     return contact_logits, contact_pre_logits
 
+#creates a contact graph from a network concatenation that is then used as the basis for convolutional modeling on top of a contact resnet in line 385
   def _output_from_pre_logits(self, contact_pre_logits, features_forward,
                               layers_forward, output_dimension, data_format,
                               crop_x, crop_y, use_on_the_fly_stats):
@@ -412,7 +418,7 @@ class ContactsNet(sonnet.AbstractModule):
           non_linearity=False,
           batch_norm=config_2d_deep.use_batch_norm,
           is_training=use_on_the_fly_stats,
-          data_format=data_format)
+          data_format=data_format) #sets up the neural net layer that will take into account the logits of the contacts as the item of difference 
     else:
       contact_logits = contact_pre_logits
 
